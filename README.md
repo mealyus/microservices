@@ -1,4 +1,4 @@
-# Logs Import into DB and APIs
+# Logs Import into DB and APIs V1.0.0
 
 A simple laravel pseudo-microservices logs import/read project.
 This is NOT a real "microservices" setup or at least something that is production ready!
