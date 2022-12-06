@@ -16,12 +16,12 @@ class MicroLog extends Model
 
     protected $guarded = ['id'];
 
-    function __construct(array $attributes = [])
-    {
+    function __construct(array $attributes = []) {
         parent::__construct($attributes);
     }
 
-    function get_start_line($file_path, $existed_text){
+    function get_start_line($file_path, $existed_text) {
+
         $GLOBALS['start_from_line'] = 0;
         LazyCollection::make(function () use($file_path, $existed_text) {
             $handle = fopen(Storage::path($file_path), 'r');
@@ -36,25 +36,10 @@ class MicroLog extends Model
             return true;
         });
         return $GLOBALS['start_from_line'];
-        /*$content = fopen(Storage::path($file_path),'r');
-        $start_from_line = 0;
-        if( $content ){
-            $line_no = 0;
-            while( ! feof($content) ){
-                $line = fgets($content);
-                if( strpos($line, $existed_text) !== FALSE ){
-                    $start_from_line = $line_no;
-                    break;
-                }
-                $line_no++;
-            }
-        }
-        fclose($content);
-        unset($content);
-        return $start_from_line;*/
     }
 
-    function import(){
+    function import() {
+
         $GLOBALS['notice_msg'] = 'No data found to insert';
         $disk = 'local';
         $file_path = 'public/logs.txt';
@@ -74,31 +59,11 @@ class MicroLog extends Model
                     }
                 }
             });
-            /*$content = fopen(Storage::path($file_path),'r');
-            if( $content ){
-                $start_insertion = false;
-                $line_no = 0;
-                while( ! feof($content) ){
-                    $line = fgets($content);
-                    if( $line_no >= $start_from_line ){
-                        $start_insertion = true;
-                    }
-                    if( $start_insertion ){
-                        $inserted = $this->create($line);
-                        if( $inserted ){
-                            $notice_msg = 'Data has inserted successfully!';
-                        }
-                    }
-                    $line_no++;
-                }
-            }
-            fclose($content);
-            Storage::append($file_path, $existed_text);*/
         }
         return $GLOBALS['notice_msg'];
     }
 
-    function create($line){
+    function create($line) {
         $inserted = false;
         $array = explode(' - ', $line);
         if( isset($array[1]) ){
