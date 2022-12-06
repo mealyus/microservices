@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\LazyCollection;
 
 class MicroLog extends Model
 {
@@ -21,7 +22,21 @@ class MicroLog extends Model
     }
 
     function get_start_line($file_path, $existed_text){
-        $content = fopen(Storage::path($file_path),'r');
+        $GLOBALS['start_from_line'] = 0;
+        LazyCollection::make(function () use($file_path, $existed_text) {
+            $handle = fopen(Storage::path($file_path), 'r');
+            while (($line = fgets($handle)) !== false) {
+                yield $line;
+            }
+        })->each(function ($line, $key) use($existed_text) {
+            if( strpos($line, $existed_text) !== FALSE ){
+                $GLOBALS['start_from_line'] = $key;
+                return false;
+            }
+            return true;
+        });
+        return $GLOBALS['start_from_line'];
+        /*$content = fopen(Storage::path($file_path),'r');
         $start_from_line = 0;
         if( $content ){
             $line_no = 0;
@@ -29,23 +44,37 @@ class MicroLog extends Model
                 $line = fgets($content);
                 if( strpos($line, $existed_text) !== FALSE ){
                     $start_from_line = $line_no;
+                    break;
                 }
                 $line_no++;
             }
         }
         fclose($content);
         unset($content);
-        return $start_from_line;
+        return $start_from_line;*/
     }
 
     function import(){
-        $notice_msg = 'No data found to insert';
+        $GLOBALS['notice_msg'] = 'No data found to insert';
         $disk = 'local';
         $file_path = 'public/logs.txt';
         $existed_text = 'above-logs-have-inserted';
         if ( Storage::disk($disk)->exists($file_path) ) {
             $start_from_line = $this->get_start_line($file_path, $existed_text);
-            $content = fopen(Storage::path($file_path),'r');
+            LazyCollection::make(function () use($file_path, $existed_text) {
+                $handle = fopen(Storage::path($file_path), 'r');
+                while (($line = fgets($handle)) !== false) {
+                    yield $line;
+                }
+            })->each(function ($line, $key) use($start_from_line) {
+                if( $key >= $start_from_line ){
+                    $inserted = $this->create($line);
+                    if( $inserted ){
+                        $GLOBALS['notice_msg'] = 'Data has inserted successfully!';
+                    }
+                }
+            });
+            /*$content = fopen(Storage::path($file_path),'r');
             if( $content ){
                 $start_insertion = false;
                 $line_no = 0;
@@ -64,9 +93,9 @@ class MicroLog extends Model
                 }
             }
             fclose($content);
-            Storage::append($file_path, $existed_text);
+            Storage::append($file_path, $existed_text);*/
         }
-        return $notice_msg;
+        return $GLOBALS['notice_msg'];
     }
 
     function create($line){

@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\MicroLog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\LazyCollection;
 
 class ImportLogs extends Command
 {
@@ -42,6 +43,22 @@ class ImportLogs extends Command
         $model = new MicroLog();
         $notice_msg = $model->import();
         $this->info($notice_msg);
+        /*$command = $this;
+        $model = new MicroLog();
+        $file_path = 'public/logs.txt';
+        $existed_text = 'above-logs-have-inserted';
+        $this->info($model->get_start_line($file_path, $existed_text));
+        $line_no = -1;
+        LazyCollection::make(function () use($file_path, $line_no) {
+            $handle = fopen(Storage::path($file_path), 'r');
+            while (($line = fgets($handle)) !== false) {
+                $line_no++;
+                yield $line;
+            }
+        })->each(function ($line) use ($command, $line_no) {
+            $command->info($line);
+            $command->info($line_no);
+        });*/
         return 0;
     }
 }
